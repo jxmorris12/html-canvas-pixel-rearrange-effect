@@ -1,8 +1,8 @@
 // Jack Morris 07/10/16
 
 // globals
-var img1 = document.getElementById("slime");
-var img2 = document.getElementById("sand") ;
+var img1 = document.getElementById("obama");
+var img2 = document.getElementById("trump") ;
 var imagePadding = 10;
 var imageSize    = img1.width; // images must be squares of the same size
 
@@ -25,6 +25,8 @@ function main() {
   var img1data = ctx.getImageData(imagePadding, imagePadding, imageSize, imageSize).data;
   var img2data = ctx.getImageData(imageSize + 2 * imagePadding, imagePadding, imageSize, imageSize).data;
 
+  console.log('img1data.length:',img1data.length,'img2data.length:',img2data.length);
+
   // cache colors from img2
 
   for(var i = 0 ; i < img2data.length; i +=4 ) {
@@ -39,6 +41,7 @@ function main() {
     img2colors.push( img2color );
   }
 
+  console.log('img2colors.length:' ,img2colors.length);
   // match each color from img1 to its closest color from img2
     // @TODO: Fix the logic a bit so that this works with images of different sizes
 
@@ -71,11 +74,13 @@ function main() {
       var c = img2color.color;
       var c2Total = Math.sqrt(c[0]*c[0] + c[1]*[1] + c[1]*c[1]);
       var c2Diff = Math.abs( c1Total - c2Total );
-      if(c2Diff < minColorDiff) {
+      if(c2Diff <= minColorDiff) {
         minColorDiff = c2Diff;
         minColorX = x;
       }
     }
+
+    if(minColorX == -1) minColorX = 0; // TEMPORARY HACK
 
     var closestColor = img2colors[minColorX];
     img2colors.splice( minColorX, 1 );
@@ -142,7 +147,7 @@ function startAnimation() {
       c.alpha += c.alphastep;
 
       // put data to canvas
-      var x = (parseInt(Math.round( c.x ) ) * imageSize * 4) + (parseInt( Math.round( c.y) ) * 4);
+      var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round(c.x) ) * 4);
       imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
       imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
       imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
