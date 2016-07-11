@@ -4,8 +4,8 @@ function main() {
   var imagePadding = 10;
   var imageSize   = 64; // px
 
-  var ANIMATION_STEPS = 10;
-  var ANIMATION_DELAY = 1000; // idfk
+  var ANIMATION_STEPS = 25;
+  var ANIMATION_DELAY = 50; // idfk
 
   var canvas = document.getElementById("myCanvas");
   var ctx = canvas.getContext("2d");
@@ -132,27 +132,29 @@ function main() {
       c.color[2] += c.bstep;
 
       // put data to canvas
-      var x = (parseInt(c.x) * imageSize * 4) + (parseInt(c.y) * 4);
-      imageData.data[x + 0] = parseInt( c.color[0] );
-      imageData.data[x + 1] = parseInt( c.color[1] );
-      imageData.data[x + 2] = parseInt( c.color[2] );
+      var x = (parseInt(Math.round( c.x ) ) * imageSize * 4) + (parseInt( Math.round( c.y) ) * 4);
+      imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
+      imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
+      imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
       imageData.data[x + 3] = 255 ; // alpha, for now this is fine
-
-      // end animation
-      ANIMATION_STEP_COUNT += 1;
-      if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
-        window.clearInterval(intervalID);
-      }
     }
 
     // put array to canvas
     console.log(imageData, imagePadding, imagePadding, 0, 0, imageSize, imageSize);
-    ctx.putImageData(imageData, 0, 0 );// , 0, 0, imageSize, imageSize);
+    ctx.putImageData(imageData, imagePadding, imagePadding );// , 0, 0, imageSize, imageSize);
+
+    // end animation
+    ANIMATION_STEP_COUNT += 1;
+    console.log('ANIMATION_STEP_COUNT:',ANIMATION_STEP_COUNT,'ANIMATION_STEPS:',ANIMATION_STEPS);
+    if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
+      console.log('Ending animation:',intervalID+'.');
+      window.clearInterval(intervalID);
+    }
   }
 
   // set animation delay
   var ANIMATION_STEP_COUNT = 0;
-  var intervalID = window.setInterval(animationStep, ANIMATION_DELAY)
+  var intervalID = window.setInterval(animationStep, ANIMATION_DELAY);
 }
 
 window.onload = main;
