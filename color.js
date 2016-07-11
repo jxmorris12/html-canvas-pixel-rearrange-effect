@@ -4,8 +4,8 @@
 var imagePadding = 10;
 var imageSize   = 64; // px
 
-var ANIMATION_STEPS = 25;
-var ANIMATION_DELAY = 50; // idfk
+var ANIMATION_STEPS = 60;
+var ANIMATION_DELAY = 30; // idfk
 
 // create caches
 var img1colors = [];
@@ -18,10 +18,10 @@ function main() {
   var canvas = document.getElementById("myCanvas");
   var ctx = canvas.getContext("2d");
   
-  var img1 = document.getElementById("sand");
+  var img1 = document.getElementById("slime");
   ctx.drawImage(img1, imagePadding, imagePadding);
 
-  var img2 = document.getElementById("slime");
+  var img2 = document.getElementById("sand");
   ctx.drawImage(img2, imageSize + 2 * imagePadding, imagePadding);
 
   var img1data = ctx.getImageData(imagePadding, imagePadding, imageSize, imageSize).data;
@@ -128,10 +128,6 @@ function startAnimation() {
     // create array
     var imageData = ctx.createImageData(imageSize, imageSize);
 
-    for(var i = 0; i < imageSize * imageSize * 4; i++) {
-      imageData.data[i] = 0;
-    }
-
     // iterate through colors
     for(var i = 0; i < img1colors.length; i++) {
 
@@ -159,13 +155,12 @@ function startAnimation() {
     }
 
     // put array to canvas
-    console.log(imageData, imagePadding, imagePadding, 0, 0, imageSize, imageSize);
-    ctx.putImageData(imageData, imagePadding, imagePadding );// , 0, 0, imageSize, imageSize);
+    ctx.putImageData( imageData, imagePadding, imagePadding );
 
     // end animation
     ANIMATION_STEP_COUNT += 1;
     if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
-      console.log('Ending animation:',intervalID+'.');
+      console.log('Ending animation.');
       window.clearInterval(intervalID);
     }
   }
