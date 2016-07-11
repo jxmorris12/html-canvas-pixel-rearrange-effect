@@ -1,8 +1,8 @@
 // Jack Morris 07/10/16
 
 // globals
-var img1 = document.getElementById("slime");
-var img2 = document.getElementById("sand") ;
+var img1 = document.getElementById("trump");
+var img2 = document.getElementById("obama") ;
 var imagePadding = 10;
 var imageSize    = img1.width; // images must be squares of the same size
 
@@ -60,8 +60,7 @@ function main() {
     img1color.y = parseInt( x / imageSize );
 
     var minColorX = -1;
-    var c1Total = Math.sqrt(r*r + g*g + b*b);
-    var minColorDiff = c1Total;
+    var minColorDiff = Number.MAX_SAFE_INTEGER ;
 
     // find closest color from img2
       // @TODO: optimize using a clever nearest-neighbor search
@@ -69,10 +68,9 @@ function main() {
     for(var x = 0; x < img2colors.length; x++) {
       var img2color = img2colors[x];
       var c = img2color.color;
-      var c2Total = Math.sqrt(c[0]*c[0] + c[1]*[1] + c[1]*c[1]);
-      var c2Diff = Math.abs( c1Total - c2Total );
-      if(c2Diff < minColorDiff) {
-        minColorDiff = c2Diff;
+      var colorDiff = Math.sqrt( (c[0]-r)*(c[0]-r) + (c[1]-g)*(c[1]-g) + (c[2]-b)*(c[2]-b) );
+      if(colorDiff < minColorDiff) {
+        minColorDiff = colorDiff;
         minColorX = x;
       }
     }
@@ -117,10 +115,11 @@ function startAnimation() {
 
   // move colors to respective locations
 
-  console.log('Animating colors to new locations.');
-
-  function animationStep()
+  function moveAnimationStep()
   { 
+    
+    if(ANIMATION_STEP_COUNT == 0) console.log('Animating pixel location changes.');
+
     // create array
     var imageData = ctx.createImageData(imageSize, imageSize);
 
@@ -133,16 +132,8 @@ function startAnimation() {
       c.x += c.xstep;
       c.y += c.ystep;
 
-      // change color
-      c.color[0] += c.rstep;
-      c.color[1] += c.gstep;
-      c.color[2] += c.bstep;
-
-      // change alpha
-      c.alpha += c.alphastep;
-
       // put data to canvas
-      var x = (parseInt(Math.round( c.x ) ) * imageSize * 4) + (parseInt( Math.round( c.y) ) * 4);
+      var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round( c.x ) ) * 4);
       imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
       imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
       imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
@@ -156,19 +147,66 @@ function startAnimation() {
     // end animation
     ANIMATION_STEP_COUNT += 1;
     if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
+      // start second animatino
+      ANIMATION_STEP_COUNT = 0;
+      colorIntervalID = window.setInterval(colorAnimationStep, ANIMATION_DELAY);
+      window.clearInterval(moveIntervalID);
+    }
+  }
+
+  function colorAnimationStep() 
+  {
+  
+    if(ANIMATION_STEP_COUNT == 0) console.log('Animating pixel color changes.');
+
+    // create array
+    var imageData = ctx.createImageData(imageSize, imageSize);
+
+    // iterate through colors
+    for(var i = 0; i < img1colors.length; i++) {
+
+      var c = img1colors[i];
+
+      // change color
+      c.color[0] += c.rstep;
+      c.color[1] += c.gstep;
+      c.color[2] += c.bstep;
+
+      // change alpha
+      c.alpha += c.alphastep;
+
+      // put data to canvas
+      var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round( c.x ) ) * 4);
+      imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
+      imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
+      imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
+
+      imageData.data[x + 3] = parseInt( Math.round( c.alpha ) );
+    }
+
+    // put array to canvas
+    ctx.putImageData( imageData, imagePadding, imagePadding );
+
+    ANIMATION_STEP_COUNT += 1;
+
+    if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
+      // start second animatino
       console.log('Ending animation.');
-      window.clearInterval(intervalID);
+      window.clearInterval(colorIntervalID);
     }
   }
 
   // set animation delay
   var ANIMATION_STEP_COUNT = 0;
-  var intervalID = window.setInterval(animationStep, ANIMATION_DELAY);
+  var moveIntervalID = window.setInterval(moveAnimationStep, ANIMATION_DELAY);
+  var colorIntervalID = -1;
 }
 
-// resize canvas
+// resize canvas by image size
 var canvas    = document.getElementById("myCanvas");
-canvas.width  = imagePadding * 3 + imageSize * 2;;
+canvas.width  = imagePadding * 3 + imageSize * 2;
 canvas.height = imagePadding * 2 + imageSize;
 
+
+// set load function
 window.onload = main;
