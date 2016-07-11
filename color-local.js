@@ -11,7 +11,7 @@ var ANIMATION_STEPS = 60;
 var ANIMATION_DELAY = 30; // idfk
 
 // for timer
-var ANIMATION_STEP_COUNT, moveIntervalID, colorIntervalID;
+var ANIMATION_STEP_COUNT, moveIntervalID, colorIntervalID, resetIntervalID;
 
 // create caches
 var img1colors = [];
@@ -28,11 +28,11 @@ function main() {
 
   // reset button
   button.innerHTML = "Calculate positions";
-  button.onclick = load;
+  button.onclick = loadImageData;
   button.disabled = false;
 }
 
-function load() {
+function loadImageData() {
   button.disabled = true;
 
   var ctx = canvas.getContext("2d");
@@ -232,7 +232,72 @@ function colorAnimationStep()
     // start second animation
     console.log('Ending animation.');
     window.clearInterval(colorIntervalID);
-    // reset button?
+    // set button method
+    button.disabled  = false;
+    button.innerHTML = "Reset pixels";
+    button.onclick   = startResetAnimation;
+  }
+}
+
+function startResetAnimation() {
+
+  // clear previous animation
+  ANIMATION_STEP_COUNT = 0;
+
+  // start new one
+  resetIntervalID = window.setInterval(resetAnimationStep, ANIMATION_DELAY);
+  button.disabled = true;
+
+}
+
+function resetAnimationStep() {
+
+  var ctx = canvas.getContext("2d");
+
+  if(ANIMATION_STEP_COUNT == 0) console.log('Moving pixels to original state.');
+
+  // create array
+  var imageData = ctx.createImageData(imageSize, imageSize);
+
+  // iterate through colors
+  for(var i = 0; i < img1colors.length; i++) {
+
+    var c = img1colors[i];
+
+    // move coords
+    c.x -= c.xstep;
+    c.y -= c.ystep;
+
+    // change color
+    c.color[0] -= c.rstep;
+    c.color[1] -= c.gstep;
+    c.color[2] -= c.bstep;
+
+    // change alpha
+    c.alpha -= c.alphastep;
+
+    // put data to canvas
+    var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round( c.x ) ) * 4);
+    imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
+    imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
+    imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
+
+    imageData.data[x + 3] = parseInt( Math.round( c.alpha ) );
+  }
+
+  // put array to canvas
+  ctx.putImageData( imageData, imagePadding, imagePadding );
+
+  ANIMATION_STEP_COUNT += 1;
+
+  if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
+    // start second animation
+    console.log('Image reset.');
+    window.clearInterval(resetIntervalID);
+    // reset button
+    button.innerHTML = "Move pixels";
+    button.onclick   = startMoveAnimation;
+    button.disabled  = false;
   }
 }
 
