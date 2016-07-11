@@ -1,26 +1,41 @@
 // Jack Morris 07/10/16
 
 // globals
-var img1 = document.getElementById("trump");
-var img2 = document.getElementById("obama") ;
+
+var img1 = document.getElementById("obama");
+var img2 = document.getElementById("trump") ;
 var imagePadding = 10;
 var imageSize    = img1.width; // images must be squares of the same size
 
 var ANIMATION_STEPS = 60;
 var ANIMATION_DELAY = 30; // idfk
 
+// for timer
+var ANIMATION_STEP_COUNT, moveIntervalID, colorIntervalID;
+
 // create caches
 var img1colors = [];
 var img2colors = [];
 
-// main function
+// main function - called when image DOM elements load
 
 function main() {
-
+  // draw images on canvas
   var ctx = canvas.getContext("2d");
   
   ctx.drawImage(img1, imagePadding, imagePadding);
   ctx.drawImage(img2, imageSize + 2 * imagePadding, imagePadding);
+
+  // reset button
+  button.innerHTML = "Calculate positions";
+  button.onclick = load;
+  button.disabled = false;
+}
+
+function load() {
+  button.disabled = true;
+
+  var ctx = canvas.getContext("2d");
 
   var img1data = ctx.getImageData(imagePadding, imagePadding, imageSize, imageSize).data;
   var img2data = ctx.getImageData(imageSize + 2 * imagePadding, imagePadding, imageSize, imageSize).data;
@@ -105,111 +120,123 @@ function main() {
   }
 
   // set button method
-  var button = document.getElementById("button");
-  button.disabled = false;
-  button.onclick = startAnimation;
+  button.disabled  = false;
+  button.innerHTML = "Move pixels";
+  button.onclick   = startMoveAnimation;
 }
 
 // called to display the animation
 
-function startAnimation() {
+function startMoveAnimation() {
+
+  // set animation delay
+  ANIMATION_STEP_COUNT = 0;
+  moveIntervalID = window.setInterval(moveAnimationStep, ANIMATION_DELAY);
 
   // disable button
-  var button = document.getElementById("button");
   button.disabled = true;
+}
+
+function moveAnimationStep()
+{ 
+
+  if(ANIMATION_STEP_COUNT == 0) console.log('Animating pixel location changes.');
 
   // get canvas
   var ctx = canvas.getContext("2d");
 
   // move colors to respective locations
 
-  function moveAnimationStep()
-  { 
+  // create array
+  var imageData = ctx.createImageData(imageSize, imageSize);
 
-    if(ANIMATION_STEP_COUNT == 0) console.log('Animating pixel location changes.');
+  // iterate through colors
+  for(var i = 0; i < img1colors.length; i++) {
 
-    // create array
-    var imageData = ctx.createImageData(imageSize, imageSize);
+    var c = img1colors[i];
 
-    // iterate through colors
-    for(var i = 0; i < img1colors.length; i++) {
+    // move coords
+    c.x += c.xstep;
+    c.y += c.ystep;
 
-      var c = img1colors[i];
+    // put data to canvas
+    var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round( c.x ) ) * 4);
+    imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
+    imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
+    imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
 
-      // move coords
-      c.x += c.xstep;
-      c.y += c.ystep;
-
-      // put data to canvas
-      var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round( c.x ) ) * 4);
-      imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
-      imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
-      imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
-
-      imageData.data[x + 3] = parseInt( Math.round( c.alpha ) );
-    }
-
-    // put array to canvas
-    ctx.putImageData( imageData, imagePadding, imagePadding );
-
-    // end animation
-    ANIMATION_STEP_COUNT += 1;
-    if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
-      // start second animatino
-      ANIMATION_STEP_COUNT = 0;
-      colorIntervalID = window.setInterval(colorAnimationStep, ANIMATION_DELAY);
-      window.clearInterval(moveIntervalID);
-    }
+    imageData.data[x + 3] = parseInt( Math.round( c.alpha ) );
   }
 
-  function colorAnimationStep() 
-  {
-  
-    if(ANIMATION_STEP_COUNT == 0) console.log('Animating pixel color changes.');
+  // put array to canvas
+  ctx.putImageData( imageData, imagePadding, imagePadding );
 
-    // create array
-    var imageData = ctx.createImageData(imageSize, imageSize);
-
-    // iterate through colors
-    for(var i = 0; i < img1colors.length; i++) {
-
-      var c = img1colors[i];
-
-      // change color
-      c.color[0] += c.rstep;
-      c.color[1] += c.gstep;
-      c.color[2] += c.bstep;
-
-      // change alpha
-      c.alpha += c.alphastep;
-
-      // put data to canvas
-      var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round( c.x ) ) * 4);
-      imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
-      imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
-      imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
-
-      imageData.data[x + 3] = parseInt( Math.round( c.alpha ) );
-    }
-
-    // put array to canvas
-    ctx.putImageData( imageData, imagePadding, imagePadding );
-
-    ANIMATION_STEP_COUNT += 1;
-
-    if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
-      // start second animatino
-      console.log('Ending animation.');
-      window.clearInterval(colorIntervalID);
-    }
+  // end animation
+  ANIMATION_STEP_COUNT += 1;
+  if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
+    // stop animation
+    window.clearInterval(moveIntervalID);
+    // button should now start second animation
+    button.onclick = startColorAnimation;
+    button.innerHTML = "Recolor pixels";
+    button.disabled = false;
   }
-
-  // set animation delay
-  var ANIMATION_STEP_COUNT = 0;
-  var moveIntervalID = window.setInterval(moveAnimationStep, ANIMATION_DELAY);
-  var colorIntervalID = -1;
 }
 
+function startColorAnimation() {
+  // clear previous animation
+  ANIMATION_STEP_COUNT = 0;
+  // start new one
+  colorIntervalID = window.setInterval(colorAnimationStep, ANIMATION_DELAY);
+  button.disabled = true;
+}
+
+function colorAnimationStep() 
+{
+
+  var ctx = canvas.getContext("2d");
+
+  if(ANIMATION_STEP_COUNT == 0) console.log('Animating pixel color changes.');
+
+  // create array
+  var imageData = ctx.createImageData(imageSize, imageSize);
+
+  // iterate through colors
+  for(var i = 0; i < img1colors.length; i++) {
+
+    var c = img1colors[i];
+
+    // change color
+    c.color[0] += c.rstep;
+    c.color[1] += c.gstep;
+    c.color[2] += c.bstep;
+
+    // change alpha
+    c.alpha += c.alphastep;
+
+    // put data to canvas
+    var x = (parseInt(Math.round( c.y ) ) * imageSize * 4) + (parseInt( Math.round( c.x ) ) * 4);
+    imageData.data[x + 0] = parseInt( Math.round( c.color[0] ) );
+    imageData.data[x + 1] = parseInt( Math.round( c.color[1] ) );
+    imageData.data[x + 2] = parseInt( Math.round( c.color[2] ) );
+
+    imageData.data[x + 3] = parseInt( Math.round( c.alpha ) );
+  }
+
+  // put array to canvas
+  ctx.putImageData( imageData, imagePadding, imagePadding );
+
+  ANIMATION_STEP_COUNT += 1;
+
+  if( ANIMATION_STEP_COUNT == ANIMATION_STEPS ) {
+    // start second animation
+    console.log('Ending animation.');
+    window.clearInterval(colorIntervalID);
+    // reset button?
+  }
+}
+
+// helpers
 function dist(a, b, c) {
   c = c || 0;
   return Math.sqrt(a*a + b*b + c*c);
@@ -220,6 +247,8 @@ var canvas    = document.getElementById("myCanvas");
 canvas.width  = imagePadding * 3 + imageSize * 2;
 canvas.height = imagePadding * 2 + imageSize;
 
+// get button
+var button = document.getElementById("button");
 
 // set load function
 window.onload = main;
